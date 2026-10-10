@@ -1,0 +1,8 @@
+#!/bin/sh
+# 00 — STOP actuator for the voice pipeline (~/Dev/GitHub/speak-md).
+# Double-tap zero, Enter. Kills anything speaking: afplay, say, espeak-ng.
+# Silent on success — the silence is the feedback.
+pkill -x afplay 2>/dev/null
+pkill -x say 2>/dev/null
+pkill -x espeak-ng 2>/dev/null
+exit 0

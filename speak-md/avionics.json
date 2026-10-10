@@ -1,0 +1,49 @@
+{
+  "digits": {
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "tree",
+    "4": "fower",
+    "5": "fife",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "niner"
+  },
+  "tokens": [
+    {
+      "keys": "00",
+      "label": "Stop",
+      "voice": "zero zero"
+    },
+    {
+      "keys": "11",
+      "label": "First token",
+      "voice": "one one"
+    },
+    {
+      "keys": "44",
+      "label": "Reserved actuator",
+      "voice": "four four"
+    },
+    {
+      "keys": "99",
+      "label": "Clone",
+      "voice": "niner niner"
+    }
+  ],
+  "phrases": [
+    "Vector one one",
+    "Vector one fife",
+    "Vector one fiver",
+    "Vector unwind",
+    "zero zero",
+    "roger",
+    "wilco",
+    "unable",
+    "break",
+    "over",
+    "over and out"
+  ]
+}

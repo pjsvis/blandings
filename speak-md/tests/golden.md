@@ -1,0 +1,37 @@
+Title.[[slnc 400]] Dogfood Fixture.[[slnc 400]]
+[[slnc 600]]
+By The Dogfood Crew.[[slnc 400]]
+[[slnc 600]]
+A bold claim,[[slnc 150]] an okuda link,[[slnc 150]] inline code span,[[slnc 150]]
+a bare .[[slnc 400]] Now task one six nine two e e,[[slnc 150]] task eight e c e four e,[[slnc 150]] A D R 28,[[slnc 150]] A D R 13,[[slnc 150]] T T S.[[slnc 400]]
+Callsigns brief onion search grammar,[[slnc 150]] brief tts temporal,[[slnc 150]] and standalone brief.[[slnc 400]]
+Written the fourteenth of September,[[slnc 150]] covering brief locus tag consumer
+and render.[[slnc 400]] J S O N L,[[slnc 150]] O K L C H,[[slnc 150]] the mind to machine pipeline.[[slnc 400]] A mid dot ,[[slnc 150]] test.[[slnc 400]]
+Logged one fower tree two,[[slnc 150]] resumed one six zero seven.[[slnc 400]] The the first of March,[[slnc 150]] 2020 entry predates all of this.[[slnc 400]]
+A wired line and a table-wire form
+for the ear to ignore.[[slnc 400]]
+[[slnc 600]]
+Section.[[slnc 400]] Section Two.[[slnc 400]]
+[[slnc 600]]
+first item with a lazy continuation line.[[slnc 400]]
+Done.[[slnc 400]] done task.[[slnc 400]]
+Open.[[slnc 400]] open task.[[slnc 400]]
+numbered one.[[slnc 400]]
+numbered two.[[slnc 400]]
+[[slnc 600]]
+Table.[[slnc 400]] Columns:[[slnc 250]] Layer and Owner.[[slnc 400]]
+Rendering,[[slnc 150]] okuda.[[slnc 400]]
+Windowing,[[slnc 150]] Herdr.[[slnc 400]]
+Speech,[[slnc 150]] the sibling silo with code in flight.[[slnc 400]]
+[[slnc 600]]
+A quoted line for Moira.[[slnc 400]]
+[[slnc 600]]
+Free paragraph with a wrapped
+continuation inside it.[[slnc 400]]
+[[slnc 600]]
+I red them all,[[slnc 150]] for I count sleep an interruption.[[slnc 400]] Most of it is shite[[slnc 500]],[[slnc 150]]
+the pass predicted.[[slnc 400]] So we have red the whole corpus.[[slnc 400]]
+
+[[slnc 1000]]
+Document complete. The exit is two zeros.
+

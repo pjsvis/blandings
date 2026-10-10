@@ -1,0 +1,856 @@
+#!/usr/bin/env python3
+"""speak-md — flatten markdown into prose and hand it to macOS `say` (Moira).
+
+Dogfood pipeline:  md -> flatten -> breathe -> say (Moira)
+espeak-ng never sits in the data path; it is the out-of-band respelling oracle
+(`speak-md check <word>` prints its IPA so a respelling can be tuned before
+it is ever heard).
+
+Breaths (edge-then-breath: the punctuation stays, silence follows) are data
+in breaths.json beside this script — two styles, two registers: pronunciation
+is tuned from the corpus (what the house actually speaks), rhythm from the
+stories (the only prose that exercises breath). One-line edit changes any
+breath length.
+
+Knowledge is two-tier by design:
+  rules   (built-in, amortized): td-XXXXXX, ADR-NNN, ISO dates, doc file paths,
+          standalone CAPS acronyms, headings, lists, tables, fences, links.
+  lexicon (learned by ear): one-off respellings added via `speak-md learn`,
+          kept in lexicon.json beside this script (the silo's versioned
+          learning state). Entries are earned by hearing a mangle — never
+          invented speculatively.
+
+Silo home: ~/Dev/GitHub/speak-md (symlinked from ~/bin). The lexicon is
+versioned in git; commit learned entries as `lex: <word>`.
+
+Usage:
+  speak-md [file]               flatten + speak (stdin if no file)
+  speak-md --dry [file]         print the flattened text, speak nothing
+  speak-md -o FILE [file]       write speech to an AIFF instead of playing
+  speak-md --voice V --rate N   say options (default: Moira)
+  speak-md --style S [file]    breath table: document | narrative
+  speak-md --pitch N [file]    pitch base for the whole utterance (register)
+  speak-md --tables skip [file]     elide tables silently
+  speak-md --tables ordinals [file] audition A: rows prefixed "Row k."
+  speak-md --tables records [file]  audition B: rows as key-value records
+  speak-md --tables shape [file]    audition C: A + the shape preamble
+  speak-md learn <mangled> <respelling>   add a lexicon entry
+  speak-md forget <word>                 remove a lexicon entry
+  speak-md check <word>...              espeak-ng IPA oracle
+  speak-md lexicon                       list learned respellings
+  speak-md recite [--dry]               the recital: speak the repertoire
+  speak-md drill [--dry]                the drill: avionics test bed
+  speak-md census [dirs]                the march map: count what Moira hears
+  speak-md ride [--dry] [dirs]          riding the marches: audition the top 83
+  speak-md probe [--dry] [file]         the probe: silcrow-numbered, paced
+
+Scope: environment tooling, not okuda. okuda renders; the environment composites.
+Speech touches neither the byte stream nor the screen.
+"""
+
+import datetime
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+# The lexicon is this silo's learning state: it lives beside the script
+# (symlink-aware), is versioned in git, and grows by ear. Override the
+# location with SPEAK_MD_LEXICON (used by `just check` to pin a lexicon).
+# Run artifacts go to the silo's tmp/ (gitignored scratch tier) — never
+# /tmp, which the OS owns and purges. In the silo or it doesn't exist.
+LEXICON_PATH = Path(os.environ.get(
+    "SPEAK_MD_LEXICON",
+    Path(__file__).resolve().parent / "lexicon.json"))
+BREATHS_PATH = Path(os.environ.get(
+    "SPEAK_MD_BREATHS",
+    Path(__file__).resolve().parent / "breaths.json"))
+DEFAULT_VOICE = "Moira"
+# Dogfood-tuned default (2026-09-10 prosody session): Moira at 140 wpm.
+# A bare call — speak-md FILE — gets the tuned voice *and* rate; hosts
+# hold zero speech knowledge. The call line is the whole contract.
+DEFAULT_RATE = "140"
+
+DIGITS = {str(i): w for i, w in enumerate(
+    "zero one two three four five six seven eight nine".split())}
+MONTHS = {i + 1: m for i, m in enumerate(
+    "January February March April May June July August September October "
+    "November December".split())}
+ORDINALS = {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth",
+            6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth",
+            11: "eleventh", 12: "twelfth", 13: "thirteenth", 14: "fourteenth",
+            15: "fifteenth", 16: "sixteenth", 17: "seventeenth",
+            18: "eighteenth", 19: "nineteenth", 20: "twentieth",
+            21: "twenty-first", 22: "twenty-second", 23: "twenty-third",
+            24: "twenty-fourth", 25: "twenty-fifth", 26: "twenty-sixth",
+            27: "twenty-seventh", 28: "twenty-eighth", 29: "twenty-ninth",
+            30: "thirtieth", 31: "thirty-first"}
+
+# Homographs — same spelling, two sounds, context decides. Phrase-level
+# (a word-boundary lexicon cannot hold these). 'have/had read' is always
+# the /rɛd/ form (grammar, not guesswork); 'I read' past in narrative.
+# Grows by ear, like everything else here.
+HOMOGRAPHS = {
+    "have read": "have red",
+    "had read": "had red",
+    "i read": "I red",
+}
+
+# The vernacular landing — the pause IS the profanity's emphasis.
+# A silence after the word lets it land. Grows by ear.
+VERNACULAR = {"shite": 500}
+
+# Section boundary: a breath between one section finishing and the next
+# beginning (the flattener's own silence; tts-prosody owns punctuation).
+SECTION_PAUSE = 700
+
+# The epilogue — the house sign-off. Pliny's closer, teaching the 00
+# actuator every time a document ends.
+EPILOGUE = "Document complete. The exit is two zeros."
+
+
+def today():
+    """Test-pinnable clock: SPEAK_MD_TODAY pins the golden; runtime reads
+    the real one."""
+    iso = os.environ.get("SPEAK_MD_TODAY")
+    return (datetime.date.fromisoformat(iso) if iso
+            else datetime.date.today())
+
+
+def avionics_digits():
+    path = Path(__file__).resolve().parent / "avionics.json"
+    return json.loads(path.read_text())["digits"]
+
+
+def attribution(text):
+    """Front-matter byline: author and publication year, spoken after
+    the title block. 'By P. G. Wodehouse, 1928.' — the ear hears
+    provenance. Bare years go to say native."""
+    m = re.match(r"^---\n(.*?)\n---\n", text, flags=re.S)
+    if not m:
+        return None
+    fm = m.group(1)
+    author = re.search(r"^author:\s*(.+)$", fm, flags=re.M)
+    pub = re.search(r"^published:\s*(.+)$", fm, flags=re.M)
+    if not author:
+        return None
+    # Initials speak without periods: 'P. G. Wodehouse' -> 'P G Wodehouse'
+    name = re.sub(r"\b([A-Z])\.", r"\1", author.group(1).strip())
+    line = "By %s" % name
+    if pub:
+        line += ", %s" % pub.group(1).strip()
+    return line + "."
+
+
+def weave_attribution(text, attr):
+    """The byline rides after the title block, as on a book."""
+    parts = text.split("\n\n", 1)
+    if len(parts) == 2 and parts[0].startswith("Title."):
+        return parts[0] + "\n\n" + attr + "\n\n" + parts[1]
+    return attr + "\n\n" + text
+
+
+def breathe(text, style="document"):
+    """Edge-then-breath: the punctuation stays (the edge — the prosodic
+    boundary); silence follows it (the breath — [[slnc]]). Paragraph
+    breaks breathe as speaker turns. The table is data (breaths.json,
+    ear-tuned); 'document' for the corpus, 'narrative' for literature.
+    Doctrine: pronunciation tuned from the repo words, rhythm from the
+    stories — each instrument tunes the parameter class it exercises."""
+    table = json.loads(BREATHS_PATH.read_text())[style]
+    marks = {",": "comma", ";": "semicolon", ":": "colon",
+             "?": "question", ".": "full_stop", "!": "exclamation",
+             "\u2014": "em_dash"}
+    gap = "[[slnc %d]]" % table["para_break"]
+    # Abbreviation periods are not sentence ends: initial sequences
+    # (P. G., N.Y.) and honorifics (Mr. Freddie) carry no breath — a
+    # period counts as an initial only if another initial follows it
+    # (else the CAPS rule's spaced letters would swallow sentence ends).
+    abbrev = re.compile(r"\b(?:Mr|Mrs|Dr|St|Prof|Hon)\.|\b[A-Z]\.(?=[A-Z]\.|\s[A-Z]\.)")
+    blocks = []
+    for block in re.split(r"\n{2,}", text):
+        block = block.strip()
+        if not block:
+            continue
+        keep = []
+        block = abbrev.sub(lambda m: (keep.append(m.group(0)),
+                                      "\x00%d\x00" % (len(keep) - 1))[1],
+                            block)
+        block = re.sub(
+            r"([,;:?.!\u2014])",
+            lambda m: m.group(1) + "[[slnc %d]]" % table[marks[m.group(1)]],
+            block)
+        blocks.append(re.sub(r"\x00(\d+)\x00",
+                             lambda m: keep[int(m.group(1))], block))
+    return ("\n" + gap + "\n").join(blocks)
+
+
+# ---------------------------------------------------------------- lexicon
+
+def load_lexicon():
+    if LEXICON_PATH.exists():
+        return json.loads(LEXICON_PATH.read_text())
+    return {}
+
+
+def save_lexicon(entries):
+    LEXICON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    LEXICON_PATH.write_text(json.dumps(entries, indent=2, sort_keys=True) + "\n")
+
+
+EXCLUDE_DIRS = {".git", "node_modules", "tmp", "__pycache__",
+                ".todos", "tests", "data", "dist"}
+
+
+def collect(dirs):
+    """Walk the marches: count what Moira actually hears. Flattens the
+    corpus first (the census vocabulary is the spoken one), then ranks
+    distinct words."""
+    import collections
+    words = collections.Counter()
+    mark_counts = collections.Counter()
+    marks = {",": "comma", ":": "colon", ";": "semicolon", "?": "question",
+             ".": "full stop", "\u2014": "em dash", "\u2013": "en dash"}
+    files = 0
+    for d in dirs:
+        for root, subdirs, names in os.walk(d):
+            subdirs[:] = [s for s in subdirs if s not in EXCLUDE_DIRS]
+            for fn in sorted(names):
+                if not fn.endswith(".md"):
+                    continue
+                try:
+                    flat = substitute(flatten(Path(root, fn).read_text()))
+                except Exception:
+                    continue
+                files += 1
+                for w in re.findall(r"[a-z']+", flat.lower()):
+                    w = w.strip("'")
+                    if len(w) >= 2:
+                        words[w] += 1
+                for ch in flat:
+                    if ch in marks:
+                        mark_counts[marks[ch]] += 1
+    return files, words, mark_counts
+
+
+def march_tokens():
+    """Tokens 11–98 minus the repeated-digit actuators (ADR-021/032):
+    83 slots, the reader's address capacity, the corpus dialect."""
+    return [n for n in range(11, 99) if n not in {44, 55, 66, 77, 88}]
+
+
+def census(dirs):
+    """Print the march map: ranked vocabulary + syntax breath counts."""
+    import datetime
+    files, words, mark_counts = collect(dirs)
+    total = sum(words.values())
+    ranked = sorted(words.items(), key=lambda kv: (-kv[1], kv[0]))
+    tokens = march_tokens()
+    cover = sum(c for _, c in ranked[:len(tokens)])
+    out = [
+        "# The march map — riding the marches\n",
+        "Generated %s by `speak-md census`. Ephemeral: numbers die with" % datetime.date.today(),
+        "this document — reference by number in speech or notes, never in",
+        "durable docs (ADR-021 doctrine: ephemeral tokens, never jotted).\n",
+        "Spoken corpus: %d files, %d words spoken, %d distinct." % (files, total, len(words)),
+        "The top %d (tokens 11-98, actuators skipped) carry %d%% of all words.\n" % (
+            len(tokens), round(100 * cover / total) if total else 0),
+        "| Token | Word | Count |",
+        "|---|---|---|",
+    ]
+    for n, (w, c) in zip(tokens, ranked):
+        out.append("| %d | %s | %d |" % (n, w, c))
+    if len(ranked) > len(tokens):
+        out.append("\n%d distinct words live below the two-digit line." % (len(ranked) - len(tokens)))
+    riders = [(w, c) for w, c in ranked[:len(tokens)] if len(w) >= 11]
+    if riders:
+        out.append("\n## March-riders — long words, worth an ear\n")
+        for w, c in riders:
+            out.append("- %s (%d)" % (w, c))
+    out.append("\n## Syntax census — the breaths she takes\n")
+    out.append("| Mark | Count |")
+    out.append("|---|---|")
+    for m, c in mark_counts.most_common():
+        out.append("| %s | %d |" % (m, c))
+    print("\n".join(out))
+
+
+def orchestrate(text):
+    """Post-substitute pass: the silences the flattener owns — the
+    vernacular landing (a pause lets the profanity land), the section
+    boundary breath, and the epilogue. Punctuation breaths belong to
+    tts-prosody; these belong to structure."""
+    for word, ms in VERNACULAR.items():
+        text = re.sub(r"\b%s\b" % word, "%s[[slnc %d]]" % (word, ms),
+                      text, flags=re.IGNORECASE)
+    text = re.sub(r"\n(?=(Title|Section|Subsection)\. )",
+                  "\n[[slnc %d]]\n" % SECTION_PAUSE, text)
+    return "%s\n\n[[slnc 1000]]\n%s\n" % (text.rstrip(), EPILOGUE)
+
+
+def probe_script(text):
+    """A probe doc is a bullet list: '- **word** — carrier sentence.'
+    The script speaks the doc's intro, then per item: silcrow in avionics
+    digits, a pause, the word, a pause, the carrier, then a coffee-sized
+    gap. Numbers are probe-local (11.., actuators skipped) — ephemeral,
+    resolved against the flat output, never jotted (ADR-021 doctrine).
+    The 'silcrow' lead-in marks the audible map: probe silcrows, not
+    census silcrows. Raw exhibits — no substitution; the mangle is the
+    evidence."""
+    intro, entries = [], []
+    for line in text.splitlines():
+        m = re.match(r"^- \*\*(.+?)\*\*\s*[—-]\s*(.+)$", line.strip())
+        if not m:
+            m = re.match(r"^- (\S+)\s+[—-]\s+(.+)$", line.strip())
+        if m:
+            entries.append((m.group(1).strip(), m.group(2).strip()))
+        elif line.strip():
+            intro.append(line.strip().lstrip("#").strip())
+        elif entries:
+            break
+    tokens = march_tokens()
+    digits = json.loads(
+        (Path(__file__).resolve().parent / "avionics.json").read_text())["digits"]
+    parts = []
+    intro = [i for i in intro if i]
+    if not intro:
+        intro_text = ""
+    elif len(intro) == 1:
+        intro_text = intro[0]
+    else:
+        # first element is the title — a sentence of its own; the rest
+        # are wrapped lines of one paragraph, joined with a space
+        intro_text = intro[0] + ". " + " ".join(intro[1:])
+    if intro_text and intro_text[-1] not in ".!?":
+        intro_text += "."
+    if intro_text:
+        parts.append(intro_text)
+    for n, (word, carrier) in zip(tokens, entries):
+        d = " ".join(digits[c] for c in str(n))
+        parts.append("silcrow %s.[[slnc 600]]\n%s.[[slnc 700]]\n%s[[slnc 900]]"
+                     % (d, word, carrier))
+    return "\n\n".join(parts)
+
+
+def gather_examples(wanted, dirs):
+    """One real sentence per wanted word, pulled from the marches
+    themselves — the ear hears the word in its natural habitat."""
+    found = {}
+    want = set(wanted)
+    for d in dirs:
+        for root, subdirs, names in os.walk(d):
+            subdirs[:] = [s for s in subdirs if s not in EXCLUDE_DIRS]
+            for fn in sorted(names):
+                if not fn.endswith(".md") or want == set(found):
+                    continue
+                try:
+                    flat = substitute(flatten(Path(root, fn).read_text()))
+                except Exception:
+                    continue
+                for sent in re.split(r"(?<=[.!?])\s+", flat):
+                    words = sent.split()
+                    if not (4 <= len(words) <= 14) or "[[" in sent or "%" in sent:
+                        continue
+                    low = sent.lower()
+                    for w in sorted(want - set(found)):
+                        if re.search(r"\b%s\b" % re.escape(w), low):
+                            found[w] = sent.strip().rstrip(".")
+    return found
+
+
+def ride(dirs, dry=False):
+    """The ride: Moira auditions the top of the march map. Paced by
+    embedded silence ([[slnc]]) — a pause, then the silcrow in avionics
+    digits, a beat, the word, then a real usage from the marches, then
+    a coffee-sized gap. No repeated lead-in words: the digits speak
+    for themselves, and repetition jars on the ear."""
+    _, words, _ = collect(dirs)
+    ranked = sorted(words.items(), key=lambda kv: (-kv[1], kv[0]))
+    tokens = march_tokens()
+    top = ranked[:len(tokens)]
+    examples = gather_examples([w for w, _ in top], dirs)
+    digits = json.loads(
+        (Path(__file__).resolve().parent / "avionics.json").read_text())["digits"]
+    items = ["Riding the marches. The %d most common words. Silcrow, "
+             "word, then usage." % len(tokens)]
+    for n, (w, _c) in zip(tokens, top):
+        tok = " ".join(digits[c] for c in str(n))
+        ex = examples.get(w, "no example on file")
+        items.append("%s.[[slnc 600]]\n%s.[[slnc 700]]\n%s.[[slnc 900]]"
+                     % (tok, w, ex))
+    speak_text("\n\n".join(items), DEFAULT_VOICE, dry)
+
+
+def speak_text(text, voice, dry=False):
+    """Speak authored script text directly — bypasses flatten/substitute on
+    purpose: the recital must speak the RAW mangle to exhibit it."""
+    if dry:
+        print(text)
+        return
+    subprocess.run(["say", "-v", voice, "-r", DEFAULT_RATE],
+                   input=text, text=True, check=True)
+
+
+def oracle(word):
+    """Print espeak-ng IPA for a word or phrase (the out-of-band reference)."""
+    for voice in ("en-ie", "en-gb"):
+        r = subprocess.run(["espeak-ng", "-q", "--ipa", "-v", voice, word],
+                           capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            print("%s  [%s]: %s" % (word, voice, " ".join(r.stdout.split())))
+            return
+    print("%s: espeak-ng unavailable" % word)
+
+
+# ---------------------------------------------------------------- spelling
+
+def spell_hex(s):
+    """Spell a hex id fragment: digits as words, letters as letters."""
+    out = []
+    for ch in s.lower():
+        out.append(DIGITS[ch] if ch.isdigit() else ch)
+    return " ".join(out)
+
+
+def join_and(items):
+    items = [i for i in items if i]
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+# ---------------------------------------------------------------- inline
+
+def strip_inline(s):
+    # Wire directives (ADR-026 wire format) are machine addresses, not
+    # prose — invisible to the ear. Both forms: the html-comment wire and
+    # the bare trailing token.
+    s = re.sub(r"%%okuda-rhs:\d{1,2}%%", "", s)
+    s = re.sub(r"<!--.*?-->", "", s)                # html comments (wire carriers)
+    s = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", s)          # image -> alt text
+    s = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", s)           # link -> text
+    s = re.sub(r"(?<!\w)https?://\S*[^\s.,;:!?\)\]\"']", "", s)  # bare URLs (keep trailing punct)
+    s = re.sub(r"<[a-zA-Z/][^>]*>", "", s)                   # html tags
+    s = re.sub(r"~~([^~]+)~~", r"\1", s)                     # strikethrough
+    s = re.sub(r"(?<![\w*])\*\*([^*]+)\*\*(?![\w*])", r"\1", s)  # bold
+    s = re.sub(r"(?<![\w*])\*([^*\s][^*]*)\*(?![\w*])", r"\1", s)  # italic
+    s = re.sub(r"(?<![\w_])__([^_]+)__(?![\w_])", r"\1", s)  # bold
+    s = re.sub(r"(?<![\w_])_([^_\s][^_]*)_(?![\w_])", r"\1", s)  # italic
+    s = re.sub(r"`([^`]+)`", r"\1", s)                       # code span
+    s = re.sub(r"\s{2,}", " ", s).strip()
+    return s
+
+
+# ---------------------------------------------------------------- flatten
+
+def is_table_sep(cells):
+    return bool(cells) and all(re.fullmatch(r":?-+:?", c) for c in cells if c)
+
+
+def heading_label(level):
+    if level == 1:
+        return "Title."
+    if level == 2:
+        return "Section."
+    return "Subsection."
+
+
+def is_fence(line):
+    return bool(re.match(r"^\s*(```|~~~)", line))
+
+
+def is_hr(line):
+    return bool(re.fullmatch(r"\s*([-*_])\s*\1\s*\1[\s\-*_]*", line))
+
+
+def flatten(text, tables="speak"):
+    # Drop YAML front matter.
+    if text.startswith("---"):
+        lines = text.splitlines()
+        for i, line in enumerate(lines[1:], 1):
+            if line.strip() == "---":
+                text = "\n".join(lines[i + 1:])
+                break
+
+    out = []
+    fence = False
+    table = []
+
+    def flush_table():
+        rows = list(table)
+        table.clear()
+        if tables == "skip" or not rows:
+            return
+        rows = [r for r in rows if not is_table_sep(r)]
+        if not rows:
+            return
+        # Cells pass strip_inline like every other prose path — table
+        # cells were the one leak: the 2026-09-15 dogfood on &speak.md
+        # heard the okuda-rhs wire read aloud because flush_table never
+        # stripped it. BRF-SPOKEN-BLOCK-GRAMMAR, A5.
+        rows = [[strip_inline(c) for c in r] for r in rows]
+        headers = [c for c in rows[0] if c]
+        body = rows[1:]
+        # Audition scaffolding (BRF-SPOKEN-BLOCK-GRAMMAR): --tables takes
+        # speak (default) | skip | ordinals | records | shape. The variants
+        # are one-variable-each experiments for the ear; the elocution
+        # refactor subsumes them later. speak stays byte-identical.
+        if tables == "shape":
+            out.append("Table of %d rows, %d columns."
+                       % (len(body), len(headers)))
+            out.append("Columns: " + join_and(headers) + ".")
+        else:
+            out.append("Table. Columns: " + join_and(headers) + ".")
+        if tables == "records":
+            for k, row in enumerate(body, 1):
+                cells = [c for c in row if c]
+                if not cells:
+                    continue
+                parts = ["%s: %s" % (h, c) for h, c in zip(headers, cells)]
+                parts += cells[len(headers):]
+                out.append("Row %d. %s." % (k, ". ".join(parts)))
+        else:
+            prefix = "Row %d. " if tables in ("ordinals", "shape") else None
+            for k, row in enumerate(body, 1):
+                cells = [c for c in row if c]
+                if cells:
+                    out.append((prefix % k if prefix else "")
+                               + ", ".join(cells) + ".")
+
+    lines = text.splitlines()
+    i = 0
+    n = len(lines)
+    while i < n:
+        line = lines[i].rstrip()
+
+        if fence:
+            if is_fence(line):
+                fence = False
+            i += 1
+            continue
+        if is_fence(line):
+            fence = True
+            flush_table()
+            i += 1
+            continue
+
+        if line.strip().startswith("|"):
+            table.append([c.strip() for c in line.strip().strip("|").split("|")])
+            i += 1
+            continue
+        flush_table()
+
+        if re.match(r"^\s*\[[^\]]+\]:\s", line):   # link reference defs
+            i += 1
+            continue
+
+        m = re.match(r"^\s{0,3}(#{1,6})\s+(.*)$", line)
+        if m:
+            txt = strip_inline(m.group(2)).strip().rstrip(" .;:")
+            if txt:
+                out.append(heading_label(len(m.group(1))) + " " + txt + ".")
+            i += 1
+            continue
+
+        if is_hr(line):
+            i += 1
+            continue
+
+        while re.match(r"^\s*>", line):          # blockquote markers
+            line = re.sub(r"^\s*>\s?", "", line, count=1)
+
+        s_raw = line.strip()
+        bullet = re.match(r"^[-*+]\s+(.*)$", s_raw)
+        numbered = None if bullet else re.match(r"^\d+[.)]\s+(.*)$", s_raw)
+        if bullet or numbered:
+            item = (bullet or numbered).group(1)
+            # Join lazy continuation lines (CommonMark: part of the item).
+            j = i + 1
+            while j < n:
+                nxt = lines[j].strip()
+                if (not nxt or is_fence(nxt) or nxt.startswith("|")
+                        or re.match(r"^[-*+]\s+", nxt)
+                        or re.match(r"^\d+[.)]\s+", nxt)
+                        or re.match(r"^#{1,6}\s", nxt)
+                        or nxt.startswith(">") or is_hr(nxt)):
+                    break
+                item += " " + nxt
+                j += 1
+            i = j - 1
+            s = strip_inline(item).strip()
+            m2 = re.match(r"^\[( |x|X)\]\s*(.*)$", s)
+            if m2:
+                s = ("Done. " if m2.group(1).lower() == "x" else "Open. ") \
+                    + m2.group(2)
+            if s and s[-1] not in ".!?,;:\u2014\"":
+                s += "."
+            if s:
+                out.append(s)
+            i += 1
+            continue
+
+        s = strip_inline(line).strip()
+        out.append(s if s else "")
+        i += 1
+
+    flush_table()
+    return "\n".join(out)
+
+
+# ---------------------------------------------------------------- tokens
+
+def substitute(text):
+    # Glyphs to words (interpunct is a visual separator, not speech).
+    text = (text.replace("\u2192", " to ").replace("\u2190", " from ")
+                .replace("\u00b7", ", "))
+
+    # 0. Homographs — phrase level, before the word-level lexicon.
+    for phrase, swap in HOMOGRAPHS.items():
+        text = re.sub(re.escape(phrase), swap, text, flags=re.IGNORECASE)
+
+    # 1. Learned lexicon, longest keys first.
+    lex = load_lexicon()
+    for key in sorted(lex, key=len, reverse=True):
+        if key:
+            text = re.sub(r"\b" + re.escape(key) + r"\b",
+                          lambda _m, r=lex[key]: r, text)
+
+    # 2. File paths -> basename words (drop dirs, date prefix, extension).
+    def path_words(m):
+        base = m.group(0).split("/")[-1]
+        base = re.sub(r"\.(md|jsonl|json|ts|tsx|js|yaml|sh)$", "", base)
+        base = re.sub(r"^\d{4}-\d{2}-\d{2}-", "", base)
+        base = re.sub(r"^\d{4}-\d{2}-", "", base)
+        return base.replace("-", " ").replace("_", " ")
+    text = re.sub(r"[\w./~-]+\.(?:md|jsonl|json|ts|tsx|js|yaml|sh)\b(?!\w)",
+                 path_words, text)
+
+    # 3. td issue ids: td-1692ee -> "task one six nine two e e"
+    text = re.sub(r"\btd-([0-9a-f]{4,10})\b",
+                  lambda m: "task " + spell_hex(m.group(1)),
+                  text, flags=re.IGNORECASE)
+
+    # 4. ADR references: ADR-028 -> "A D R 28"
+    text = re.sub(r"\bADR-(\d+)\b",
+                  lambda m: "A D R %d" % int(m.group(1)), text)
+
+    # 4a. Clerical title: Rev. expands to the full word — say's own
+    # expansion stresses the wrong E (probe silcrow 12 ruled: ear-earned).
+    text = re.sub(r"\bRev\.", "Reverend", text)
+
+    # 4b. Brief callsign compounds: BRF-ONION-SEARCH-GRAMMAR ->
+    # "brief onion search grammar"; standalone BRF -> "brief".
+    # The semantic call, probe silcrow 13, ear-ruled: the word carries
+    # meaning where the mangle ("bref") and the letters make the
+    # listener decode 316 times. One rule, all callsign compounds
+    # become phrases at once. Runs before rule 5 so standalone BRF
+    # never falls to letters — the losing exhibit.
+    def brf_sub(m):
+        words = m.group(0).split("-")[1:]
+        return " ".join(["brief"] + [w.lower() for w in words])
+    text = re.sub(r"\bBRF(?:-[A-Z][A-Z0-9]*)+\b", brf_sub, text)
+    text = re.sub(r"\bBRF\b", "brief", text)
+
+    # 5. Standalone CAPS acronyms (not part of hyphen compounds): TTS -> T T S
+    text = re.sub(r"(?<![\w-])([A-Z]{2,5})(?![\w-])",
+                  lambda m: " ".join(m.group(1)), text)
+
+    # 6. ISO dates: 2026-09-14 -> "the fourteenth of September". The
+    # current year goes unspoken — the ear always knows what year it is
+    # (speech is ephemeral, ADR-021 doctrine; eye-documents outlive the
+    # moment, the voice does not). Past years keep their date.
+    def date_sub(m):
+        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        if mo in MONTHS and 1 <= d <= 31:
+            spoken = "the %s of %s" % (ORDINALS[d], MONTHS[mo])
+            if y != today().year:
+                spoken += ", %d" % y
+            return spoken
+        return m.group(0)
+    text = re.sub(r"\b(\d{4})-(\d{2})-(\d{2})\b", date_sub, text)
+
+    # 7. Clock times: 14:32 -> "one fower tree two" — the 24-hour clock
+    # in avionics digits, the house speech register.
+    def time_sub(m):
+        return " ".join(avionics_digits()[c]
+                        for c in m.group(0).replace(":", ""))
+    text = re.sub(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", time_sub, text)
+
+    return re.sub(r" {2,}", " ", re.sub(r"\n{3,}", "\n\n", text)).strip()
+
+
+# ---------------------------------------------------------------- cli
+
+def main(argv):
+    if argv and argv[0] == "learn":
+        if len(argv) != 3:
+            print("usage: speak-md learn <mangled> <respelling>", file=sys.stderr)
+            return 2
+        bad, good = argv[1], argv[2]
+        lex = load_lexicon()
+        lex[bad] = good
+        save_lexicon(lex)
+        print('Learned: "%s" -> "%s"' % (bad, good))
+        print("espeak-ng IPA check:")
+        oracle(bad)
+        oracle(good)
+        return 0
+
+    if argv and argv[0] == "forget":
+        if len(argv) != 2:
+            print("usage: speak-md forget <word>", file=sys.stderr)
+            return 2
+        lex = load_lexicon()
+        if argv[1] in lex:
+            del lex[argv[1]]
+            save_lexicon(lex)
+            print('Forgotten: "%s"' % argv[1])
+        else:
+            print("not in lexicon: %s" % argv[1], file=sys.stderr)
+        return 0
+
+    if argv and argv[0] == "check":
+        for word in argv[1:]:
+            oracle(word)
+        return 0
+
+    if argv and argv[0] == "lexicon":
+        lex = load_lexicon()
+        if not lex:
+            print("(lexicon empty — nothing learned yet)")
+        for k in sorted(lex):
+            print("%-32s -> %s" % (k, lex[k]))
+        return 0
+
+    if argv and argv[0] == "recite":
+        # The recital: speak the repertoire. Each entry sounds as
+        # "«raw word». Becomes. «tuned»." — the audit hears the mangle
+        # and the fix, both, per entry. Deliberately NOT substituted.
+        dry = "--dry" in argv[1:]
+        lex = load_lexicon()
+        if not lex:
+            print("(repertoire empty — nothing earned yet)")
+            return 0
+        n = len(lex)
+        lines = ["The repertoire. %d %s." % (n, "entry" if n == 1 else "entries")]
+        for word in sorted(lex, key=str.lower):
+            lines.append("%s. Becomes. %s." % (word, lex[word]))
+        speak_text("\n\n".join(lines), DEFAULT_VOICE, dry)
+        return 0
+
+    if argv and argv[0] == "drill":
+        # The drill: the avionics test bed. Speaks the voice-ingress
+        # digit calls (avionics.json beside the exe) so the number
+        # vocalisations can be tuned by ear — same learning model as
+        # the repertoire, one table edit at a time.
+        dry = "--dry" in argv[1:]
+        path = Path(__file__).resolve().parent / "avionics.json"
+        table = json.loads(path.read_text())
+        lines = ["The avionics drill. Digits."]
+        lines.append(", ".join(table["digits"][str(d)] for d in range(10)) + ".")
+        lines.append("Tokens.")
+        for t in table["tokens"]:
+            lines.append("%s. %s." % (t["voice"], t["label"]))
+        lines.append("Phrases.")
+        for p in table["phrases"]:
+            lines.append(p + ".")
+        speak_text("\n\n".join(lines), DEFAULT_VOICE, dry)
+        return 0
+
+    if argv and argv[0] == "census":
+        dirs = [a for a in argv[1:] if not a.startswith("--")]
+        census(dirs or ["."])
+        return 0
+
+    if argv and argv[0] == "ride":
+        dry = "--dry" in argv[1:]
+        dirs = [a for a in argv[1:] if not a.startswith("--")]
+        ride(dirs or ["."], dry)
+        return 0
+
+    if argv and argv[0] == "probe":
+        dry = "--dry" in argv[1:]
+        args = [a for a in argv[1:] if not a.startswith("--")]
+        path = args[0] if args else "-"
+        text = Path(path).read_text() if path != "-" else sys.stdin.read()
+        speak_text(probe_script(text), DEFAULT_VOICE, dry)
+        return 0
+
+    dry = out = rate = pitch = None
+    voice = DEFAULT_VOICE
+    style = "document"
+    tables = "speak"
+    path = None
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == "--dry":
+            dry = True
+        elif a == "-o" and i + 1 < len(argv):
+            i += 1
+            out = argv[i]
+        elif a == "--voice" and i + 1 < len(argv):
+            i += 1
+            voice = argv[i]
+        elif a == "--style" and i + 1 < len(argv):
+            i += 1
+            style = argv[i]
+            if style not in json.loads(BREATHS_PATH.read_text()):
+                print("unknown style: %s" % style, file=sys.stderr)
+                return 2
+        elif a == "--rate" and i + 1 < len(argv):
+            i += 1
+            rate = argv[i]
+        elif a == "--pitch" and i + 1 < len(argv):
+            i += 1
+            pitch = argv[i]
+        elif a == "--tables" and i + 1 < len(argv):
+            i += 1
+            tables = argv[i]
+        elif a in ("-h", "--help"):
+            print(__doc__)
+            return 0
+        else:
+            path = a
+        i += 1
+
+    if path:
+        p = Path(path)
+        if not p.is_file():
+            print("not a file: %s" % path, file=sys.stderr)
+            return 2
+        text = p.read_text()
+    else:
+        text = sys.stdin.read()
+
+    spoken = substitute(flatten(text, tables=tables))
+    if not spoken.strip():
+        print("nothing to speak", file=sys.stderr)
+        return 1
+    attr = attribution(text)
+    if attr:
+        spoken = weave_attribution(spoken, attr)
+    flat = orchestrate(breathe(spoken, style))
+    # Whole-utterance register: pbas never resets (the husky finding),
+    # so a pitch base at the head is a register, not a dip — the one
+    # honest scope for it.
+    if pitch is not None:
+        flat = "[[pbas %s]]\n%s" % (pitch, flat)
+
+    if dry:
+        print(flat)
+        return 0
+
+    cmd = ["say", "-v", voice, "-r", rate if rate is not None else DEFAULT_RATE]
+    if out:
+        cmd += ["-o", out]
+    subprocess.run(cmd, input=flat, text=True, check=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -1,0 +1,22 @@
+{
+  "document": {
+    "comma": 150,
+    "semicolon": 250,
+    "colon": 250,
+    "question": 300,
+    "full_stop": 400,
+    "exclamation": 350,
+    "para_break": 600,
+    "em_dash": 250
+  },
+  "narrative": {
+    "comma": 150,
+    "semicolon": 250,
+    "colon": 250,
+    "question": 300,
+    "full_stop": 650,
+    "exclamation": 350,
+    "para_break": 900,
+    "em_dash": 350
+  }
+}

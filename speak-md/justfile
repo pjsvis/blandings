@@ -1,0 +1,34 @@
+# speak-md — just recipes for the dogfood TTS silo
+
+# Quality gate: syntax + golden flatten test with a pinned (empty) lexicon
+# and a pinned clock, so the golden never breaks on learned entries or
+# the year turning over.
+check:
+    @python3 -m py_compile speak-md
+    @mkdir -p tmp && SPEAK_MD_LEXICON=tests/empty-lexicon.json SPEAK_MD_TODAY=2026-09-10 ./speak-md --dry tests/fixture.md > tmp/golden-check.txt
+    @diff -u tests/golden.md tmp/golden-check.txt && echo "golden: ok"
+    @./speak-md probe --dry tests/probe-fixture.md > tmp/probe-check.txt
+    @diff -u tests/probe-golden.md tmp/probe-check.txt && echo "probe golden: ok"
+
+# Recapture the golden output after an intentional flattener change.
+golden:
+    @SPEAK_MD_LEXICON=tests/empty-lexicon.json SPEAK_MD_TODAY=2026-09-10 ./speak-md --dry tests/fixture.md > tests/golden.md
+    @echo "golden recaptured"
+
+# Render the before/after listening pair for a document into the silo's
+# scratch tier, then play both through Moira. Artifacts live in tmp/ —
+# in the silo or it doesn't exist — gitignored, regenerated per run.
+# Works from any directory — relative paths resolve against the invocation
+# dir: `just -f ~/Dev/GitHub/speak-md/justfile demo NOW.md` from inside okuda.
+demo file:
+    #!/bin/bash
+    set -euo pipefail
+    mkdir -p ~/Dev/GitHub/speak-md/tmp
+    f="{{file}}"
+    case "$f" in /*) ;; *) f="{{invocation_directory()}}/$f";; esac
+    say -v Moira -o ~/Dev/GitHub/speak-md/tmp/before.aiff -f "$f"
+    ~/Dev/GitHub/speak-md/speak-md -o ~/Dev/GitHub/speak-md/tmp/after.aiff "$f"
+    echo "before: ~/Dev/GitHub/speak-md/tmp/before.aiff"
+    echo "after:  ~/Dev/GitHub/speak-md/tmp/after.aiff"
+    afplay ~/Dev/GitHub/speak-md/tmp/before.aiff
+    afplay ~/Dev/GitHub/speak-md/tmp/after.aiff

@@ -202,6 +202,11 @@ moir-poet voice:
     @speak-md probe --dry tmp/poet-probe.md > tmp/poet-moir-flat.txt
     @say -v {{voice}} -r 140 -f tmp/poet-moir-flat.txt
 
+# Pipe golden test
+[group('voice')]
+pipe-check:
+    @just -f speak-md/justfile check
+
 # ── registries ───────────────────────────────────────────────
 
 # Quality gate — before every commit
