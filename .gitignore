@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Runtime
+node_modules
+*.log
+.env
+
+# td task database (runtime state)
+.todos/
+
+# Ephemeral scratch — exists, never registered, regenerated at will
+tmp/
