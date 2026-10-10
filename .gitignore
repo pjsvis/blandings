@@ -11,3 +11,7 @@ node_modules
 
 # Ephemeral scratch — exists, never registered, regenerated at will
 tmp/
+
+# Local library — in copyright in the operator's jurisdiction (UK/EU to 2045).
+# Referenced by title; never committed (ADR-CORPUS-POLICY-002).
+narratives/company-for-gertrude.md
