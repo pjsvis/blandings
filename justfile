@@ -17,6 +17,57 @@ info:
 orient:
     @bash scripts/orient.sh
 
+# ── voice (the play) ─────────────────────────────────────────
+
+# Speak a file
+[group('voice')]
+speak file:
+    @speak-md {{file}}
+
+# The repertoire audit
+[group('voice')]
+recital:
+    @speak-md recite
+
+# The avionics bed
+[group('voice')]
+drill:
+    @speak-md drill
+
+# The audition book
+[group('voice')]
+auditions:
+    @speak-md auditions.md
+
+# House terms
+[group('voice')]
+house:
+    @mkdir -p tmp
+    @speak-md --dry house-terms.md > tmp/house-flat.txt
+    @say -v Moira -r 140 -f tmp/house-flat.txt
+
+# The march map
+[group('voice')]
+census:
+    @mkdir -p tmp
+    @speak-md census > tmp/census.md
+
+# Literature stress test
+[group('voice')]
+story:
+    #!/bin/bash
+    set -euo pipefail
+    f="$(gum file narratives --file)"
+    [ -n "$f" ] && speak-md --style narrative "$f"
+
+# Pick, then hear
+[group('voice')]
+pick:
+    #!/bin/bash
+    set -euo pipefail
+    f="$(gum file . --file)"
+    [ -n "$f" ] && speak-md "$f"
+
 # ── registries ───────────────────────────────────────────────
 
 # Quality gate — before every commit
