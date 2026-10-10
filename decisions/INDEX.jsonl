@@ -1,1 +1,2 @@
 {"file":"001-founding.md","date":"2026-10-10","status":"Accepted","summary":"The silo is founded","meta":{},"callsign":"ADR-FOUNDING"}
+{"file":"002-corpus-policy.md","date":"2026-10-10","status":"Accepted","summary":"The corpus policy — publish the silo, hold the copyright","meta":{},"callsign":"ADR-CORPUS-POLICY-002"}
