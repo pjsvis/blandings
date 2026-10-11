@@ -25,11 +25,11 @@ External tools: `DEPENDENCIES.md`.
 
 ## The pipe
 
-`speak-md/` is the flattener — the process okuda calls for a recital, and the
+`speak-md/` is the flattener — the process a recital calls for, and the
 process the play rehearses against. It is self-contained: its own `justfile`,
 `tests/`, and the tuning state (`lexicon.json` the repertoire, `avionics.json`
-the drill, `breaths.json`). This silo owns it; okuda **names** it rather than
-vendoring it. The command is on PATH: `~/bin/speak-md` → `speak-md/speak-md`.
+the drill, `breaths.json`). This silo owns it. The command is on PATH:
+`~/bin/speak-md` → `speak-md/speak-md`.
 
 ## Related silos
 

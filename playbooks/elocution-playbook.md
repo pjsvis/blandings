@@ -67,17 +67,17 @@ Intro line. The flat output is the map — mark by number.
 - **spent** — The evening was well spent.   (a control)
 ```
 
-- Doc: `okuda/tmp/<class>-probe.md` (scratch tier — regenerable)
+- Doc: `tmp/<class>-probe.md` (scratch tier — regenerable)
 - Speak: `speak-md probe` — silcrow-numbered (local 11.., actuators
   skipped), paced (`[[slnc]]` 600/700/900), the flat output is the
   number map. Numbers are probe-local and ephemeral — never jot them;
   the "silcrow" lead-in marks which map you're hearing (probe, not
   census).
-- Recipe: `just moira-<class>` in okuda's justfile, `[group('moira')]`,
+- Recipe: `just moira-<class>` in this silo's justfile, `[group('voice')]`,
   following `moira-ent`:
 
 ```
-[group('moira')]
+[group('voice')]
 moira-<class>:
     @mkdir -p tmp
     @speak-md probe --dry tmp/<class>-probe.md > tmp/<class>-flat.txt
@@ -86,7 +86,7 @@ moira-<class>:
 
 ## Phase 2 — round one: listen, then report
 
-Play the probe; read along (`okuda tmp/<class>-probe.md`) if you want
+Play the probe; read along (`tmp/<class>-probe.md`) if you want
 the input visible while the output sounds. Round one is the baseline —
 the flattener passes an unprobed class through untouched, so what you
 hear is Moira's raw behaviour.
@@ -190,7 +190,7 @@ is a loop and not a lookup.
 
 - **Scan:** document 875×, content 499, agent 215, intent 175 — Zipf
   head, probe earned.
-- **Probe:** `okuda/tmp/ent-probe.md`, recipe `just moira-ent`.
+- **Probe:** `tmp/ent-probe.md`, recipe `just moira-ent`.
 - **Round one:** played. The flattener passes -ent through untouched;
   the heard mangle is baseline.
 - **Round two:** awaits the ear report — which words, how.
@@ -217,8 +217,8 @@ report decides.
 | State | Home |
 |---|---|
 | repertoire (tuned words) | `speak-md/lexicon.json` (git = learning curve) |
-| probes, probes' audio | `okuda/tmp/`, scratch tier, regenerable |
-| recipes (the instruments) | okuda justfile, `[group('speech')]` |
+| probes, probes' audio | `tmp/`, scratch tier, regenerable |
+| recipes (the instruments) | this silo's justfile, `[group('voice')]` |
 | avionics table | `speak-md/avionics.json` |
 | process state | td (td-1977bc) |
 | vocabulary, register | `speak-md/README.md` |

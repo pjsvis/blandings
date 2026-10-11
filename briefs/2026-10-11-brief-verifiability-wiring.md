@@ -46,7 +46,7 @@ Bring the silo's claims under gates, in this order (value per unit of cost):
 5. **Date invariant** — a document's ISO filename prefix and its declared
    `**Date:**` must agree. The corpus is date-prefixed and nothing checks it.
 6. **The one-way valve** — persisted documents cite callsigns and SHAs, never td
-   IDs (okuda's `scripts/td-id-lint.ts`). Zero instances today, so the baseline
+   IDs (the okuda silo's td-id lint). Zero instances today, so the baseline
    starts empty and the gate costs nothing to hold.
 
 ## Why it earns its place
@@ -69,12 +69,11 @@ nothing was pointed at it. An ungated claim is not a verified claim.
 
 ## How
 
-- Port the shape, not the corpus. okuda's gate is
-  `okuda/justfile:117-118` — eleven lints chained. Its base scanner,
-  `okuda/scripts/td-id-lint.ts`, exports `scannedFiles()` and `EXEMPT_FILES` so
+- Port the shape, not the corpus. The okuda silo's gate chains eleven lints;
+  its base scanner exports `scannedFiles()` and `EXEMPT_FILES` so
   one scan set feeds several gates and cannot drift between them. Take that
   factoring: one scanner module, N lints over it.
-- Baselines follow the house ratchet exactly as okuda documents it
+- Baselines follow the house ratchet exactly as the okuda silo documents it
   (`lexicon-baseline.json`, `date-baseline.json`): adopted sediment is recorded,
   *at-count passes, over-count fails*, and the baseline may only shrink. Never
   bulk-edit history to make a new gate green.
@@ -97,11 +96,11 @@ Six gates, one scanner module, `just check` rewired, plus the one-line fix to
 ## Out of scope
 
 - **okuda-specific lints** — `facade-lint`, `tree-lint`, `signature-check`,
-  `archive-lint`, `prose-check --strict-leaks` are answers to okuda's
+  `archive-lint`, `prose-check --strict-leaks` are answers to the okuda silo's
   problems. The retrofit playbook is explicit: a reference implementation is
-  not a template (`cool-pi-extensions/playbooks/repo-setup-retrofit-playbook.md`).
+  not a template (the retrofit playbook in `cool-pi-extensions`).
 - **The Pi agent config audit** — built in `cool-pi-extensions`
-  (`scripts/audit-pi-config.ts`, `just pi-audit`); that silo owns it by Decision
+  (`just pi-audit`); that silo owns it by Decision
   013 and the request is in its inbox.
 - **speak-md's internal tests** — they live in `speak-md/justfile check`; item 1
   wires the gate, it does not write new tests.

@@ -11,7 +11,7 @@ The speech silo's proper nouns. Brand surfaces: Moira speaks each as
 the house intends, or not at all. Every entry carries its oracle IPA
 (the candidate's sound, as espeak reads it) and awaits the ear; tuned
 entries graduate to the lexicon, the recital audits, the flattener
-makes them sound tuned ever after. `just moira-house` (in okuda)
+makes them sound tuned ever after. `just house`
 speaks this document.
 
 | Term | Oracle (en-ie) | Note |
@@ -23,7 +23,7 @@ speaks this document.
 | okudagram | ˈəʊkjuːdˌaɡɹam | as written |
 | gloam | ɡlˈəʊm | the launcher's name |
 | Herdr | hˈɜːdə | the host; HER-der |
-| Moir | mwˈɑː | the aunt's name, register-cast (see docs/2026-09-11-the-repertory-company.md, okuda); oracle reads her dangerously French — "mwah". Candidates: "mwar" [ˈɛmwˈɔː], "more" [mˈɔː] — the names session decides |
+| Moir | mwˈɑː | the aunt's name, register-cast (see docs/2026-09-11-the-repertory-company.md); oracle reads her dangerously French — "mwah". Candidates: "mwar" [ˈɛmwˈɔː], "more" [mˈɔː] — the names session decides |
 | X and Y | ˈɛks and wˈaɪ | the Cartesian coordinates (the knowledge table's "why did we choose X over Y"); rendered as flat letters and not impressed. Candidate: a weighted respell to restore their standing — the names session decides |
 
 ## The Latin, restored classical
@@ -43,10 +43,9 @@ rules; a commendation is not performed until its Latin is auditioned.
 
 ## The commendation standard
 
-A commendation is a performance, not an announcement. The patron wall
-(`docs/2026-09-10-user-commendations.md`, okuda's corpus) is spoken
+A commendation is a performance, not an announcement. The patron wall is spoken
 word and lip perfect or not at all — full rehearsal before any
-performance: the ear listens to the whole letter (`just
-moira-commendation`), every proper noun in it auditions first
+performance: the ear listens to the whole letter, every proper noun in it
+auditions first
 (Plinius, Vesuvius, Titus, the *librarius*), and no commendation
 ships with an unearned lexicon entry.

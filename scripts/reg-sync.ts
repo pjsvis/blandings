@@ -543,7 +543,7 @@ function syncOne(name: string, fix: boolean, csMap: Map<string, string>): { miss
 
 /** Render a tier's `index.md` from its registry entries — the OKF-visible
  *  export. Deterministic: same entries, same bytes. Bare `.md` path tokens
- *  render as doc-refs in okuda; external OKF consumers get a table they
+ *  render as doc-refs; external OKF consumers get a table they
  *  can parse. Pure. */
 export function renderIndexDoc(tier: string, entries: Entry[]): string {
   const rows = [...entries]

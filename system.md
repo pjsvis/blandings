@@ -184,7 +184,7 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   the tempo defence).
 
 * **Fermata**: a deliberate held frame at a mode boundary — the beat before the
-  next thing. Coined 2026-10-03 in the okuda exit (the drain window's frozen
+  next thing. Coined 2026-10-03 (the drain window's frozen
   document frame before the picker, over-determined: leak bound + gear-change
   beat, ADR-EXIT-FERMATA-051). The held frame must be contentful and the beat
   consistent, or it reads as latency, not rest. The reader's tempo is part of the
@@ -241,7 +241,7 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   `ADR-DOCUMENT-LIFECYCLE-057` (the citation graph as the oracle; *a citation that
   resolves is not yet a citation that means*); an *Out of scope* section as an
   audit surface for a design's boundary. **Coined 2026-10-09** from the operator's
-  reading of the okuda render.
+  reading of a render.
 
 * **Subtraction as discovery**: removing options is an *instrument of discovery*,
   not merely an economy. What survives removal is the problem's shape — its

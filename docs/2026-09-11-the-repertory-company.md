@@ -2,7 +2,7 @@
 date: 2026-09-11
 kind: casting doctrine — discussion sketch
 lineage: the register bisection → the aunt probe → the manfriend policy.
-  Companion to speak-md's elocution playbook and the &ear.md queue.
+  Companion to `playbooks/elocution-playbook.md`.
 status: awaiting players and script — a sketch, not a brief.
 ---
 
