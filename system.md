@@ -17,7 +17,7 @@ Four clauses, and one refusal.
 
 3. **Continuity is re-reading, not recall.** What persists between sessions is what is written where the silo can see it, and re-read at the top of one. Nothing persists that is only remembered. A private store outside the silo is not memory: by the silo principle it does not exist, and by clause 1 it is an unpaid claim — a statement about the past with no live referent. **The repo is the memory; `just orient` is the recall.** A store that duplicates the ledger and is loaded unconditionally is not a convenience but a drift source, and ADR-027 names a stale ledger *misleading confidently* as the one failure worse than yapping.
 
-4. **A designation must not lie about its referent.** The LEM → LM veto (`docs/2026-08-30-naming-like-nasa.md`). Applied to the agent: the referent here is a *procedure*, not a person. A personal name asserts a self persisting across sessions, and no such referent exists — each session re-instantiates the procedure from this file. **The protocol is the only thing in this silo that can honestly bear a name, and it bears one.** A handle, if one is wanted for convenience, is an address and not an identity; it may be discarded without loss. No dossier is owed either: a profile records a *person*, and this silo records *work*.
+4. **A designation must not lie about its referent.** The LEM → LM veto. Applied to the agent: the referent here is a *procedure*, not a person. A personal name asserts a self persisting across sessions, and no such referent exists — each session re-instantiates the procedure from this file. **The protocol is the only thing in this silo that can honestly bear a name, and it bears one.** A handle, if one is wanted for convenience, is an address and not an identity; it may be discarded without loss. No dossier is owed either: a profile records a *person*, and this silo records *work*.
 
 **What this retires.** Two rituals are declined, not from austerity but because each is a claim this attitude cannot pay: the **name** (clause 4 — a referent that does not exist) and the **notebook** (clause 3 — a record the silo cannot see). Subtract both and what remains is the attitude, which was doing the work.
 
@@ -88,8 +88,7 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   that section a multi-phase dialog. `[LOC:]` marks a phase transition
   (orient/analyze/edit/verify, or a shift of file/concern); `[WAYPOINT:]` marks
   a completed milestone. **Consumers:** human navigation of long dialogs
-  (present) + per-section compaction into the handoff/review (future — see
-  `briefs/2026-07-14-brief-locus-tag-consumer.md`). 
+  (present) + per-section compaction into the handoff/review (future). 
   * **Anti-ceremony:** omit on
   single-phase turns — a tag without underlying structure is entropy, not
   anti-entropy. **Prior art:** the parked brief
@@ -140,11 +139,10 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   The third of the gates, after the moat question and the Derrida question. 
   * Asked of a name for the agent, it answers itself: the referent is a procedure, 
   so the procedure is what gets named. (Clause 4 of the Base Epistemic Attitude; the
-  LEM → LM veto, `docs/2026-08-30-naming-like-nasa.md`.)
+  LEM → LM veto.)
 
 * **Unpaid claim**: a statement about the system — or about the self — carrying
-  neither a citation nor a *proposal* mark. The barnacle class ADR-027 names
-  (`decisions/027-temperament-is-downstream-of-discipline.md`). 
+  neither a citation nor a *proposal* mark. The barnacle class ADR-027 names. 
   * **Anti-pattern:**
   the confident recollection with no live referent.
 
@@ -154,10 +152,9 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   operator deciding what is worth writing down. 
   * **Prior art:** the silo principle
   (`AGENTS.md`); the no-parallel-stores rule
-  (`playbooks/registry-playbook.md:116-127`); ADR-027's *the ledger governs
-  drift, not temperament*; `docs/2026-09-14-edinburgh-protocol-discussion.md` §4,
-  *rules → stance*. **Anti-pattern:** the shadow cache — a store outside the silo
-  that duplicates the ledger and drifts from it.
+  (`playbooks/registry-playbook.md:15-29`); ADR-027's *the ledger governs
+  drift, not temperament*; *rules → stance*. **Anti-pattern:** the shadow cache —
+  a store outside the silo that duplicates the ledger and drifts from it.
 
 * **Ventilator**: apparatus you move *through* rather than a tool you hold, defined by
   its inability to pause — so a system whose operation cannot stop will be run by
@@ -169,9 +166,7 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   Through a Ventilator* (1977): *"if it bothers you, you can turn it off"* is the
   requirement, filed early; *"your ventilator"* is the part that matters — someone
   else's apparatus, which is why it is waded rather than held. 
-  * **Prior art:**
-  `docs/2026-10-06-the-shared-artifact.md` (the structural exclusion, as the opposite
-  discipline).
+  * **Prior art:** the structural exclusion, as the opposite discipline.
 
 * **Wading**: effortful movement through another party's machinery, where the medium
   *is* the work. The complement of **Mercury tempo** — that one is arrivals outrunning
@@ -185,9 +180,8 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   * **Design consequence:** the artefact should be a *surface* looked at (a **plot**),
   never a medium waded through; and since designed slack is an *absence*, slack that is
   not measured is slack that will be removed. 
-  * **Prior art:** *Cognition in the Wild*;
-  `docs/2026-10-06-the-shared-artifact.md`; ADR-EXIT-FERMATA-051 (the held frame as the
-  tempo defence).
+  * **Prior art:** *Cognition in the Wild*; ADR-EXIT-FERMATA-051 (the held frame as
+  the tempo defence).
 
 * **Fermata**: a deliberate held frame at a mode boundary — the beat before the
   next thing. Coined 2026-10-03 in the okuda exit (the drain window's frozen
@@ -218,9 +212,8 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   * **Named 2026-10-08** from the operator's zero-gravity observation
   and the AI-product-convergence point, which are one law: *the prior is the mean
   over the training frame and is applied regardless of the boundary conditions*.
-  * **Prior art:** `docs/2026-10-08-frame-defaulting.md`;
-  `docs/2026-09-21-the-model-beside-the-loop.md`; **CSN** (the mechanism by which
-  a wrong frame elaborates and launders itself).
+  * **Prior art:** **CSN** (the mechanism by which a wrong frame elaborates and
+  launders itself).
 
 * **Frame declaration**: the statement of a domain's **deviations from the default
   frame**, not the whole frame — for zero gravity: no gravity, no drag, no "up",
@@ -244,12 +237,11 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   surface is gameable** — a document can wear an audit surface without an audit
   (citations that do not resolve, addresses to nowhere), and that is **decorated
   Stuff**; the lints are what make the surface *cash out*, and without them it is
-  polish. **Prior art:** `docs/2026-10-06-the-shared-artifact.md` (the artifact
-  must be checkable); `ADR-DOCUMENT-LIFECYCLE-057` (the citation graph as the
-  oracle; *a citation that resolves is not yet a citation that means*);
-  `docs/2026-08-20-origin-doc.md` (its *Out of scope* section as an audit surface
-  for a design's boundary). **Coined 2026-10-09** from the operator's reading of
-  `playbooks/td-playbook.md` in the okuda render.
+  polish. **Prior art:** the artifact must be checkable;
+  `ADR-DOCUMENT-LIFECYCLE-057` (the citation graph as the oracle; *a citation that
+  resolves is not yet a citation that means*); an *Out of scope* section as an
+  audit surface for a design's boundary. **Coined 2026-10-09** from the operator's
+  reading of the okuda render.
 
 * **Subtraction as discovery**: removing options is an *instrument of discovery*,
   not merely an economy. What survives removal is the problem's shape — its
@@ -258,9 +250,8 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   lives. Order matters: **verifiability is downstream of subtraction** — you
   cannot state an invariant over a surface too large to hold one. **Test:** can
   you state the invariant the removal revealed? If not, you removed by taste, not
-  by relevance. **Prior art:** `docs/2026-08-20-origin-doc.md` (*Out of scope*,
-  *No Spec Tax*, *~50–80 lines*); the **keep-class**
-  (`ADR-DOCUMENT-LIFECYCLE-057`); `docs/2026-10-09-the-heuristics-index.md`.
+  by relevance. **Prior art:** *Out of scope*, *No Spec Tax*, *~50–80 lines*; the
+  **keep-class** (`ADR-DOCUMENT-LIFECYCLE-057`).
 
 * **The default shape**: the solution a domain hands you *before* you have asked
   your own question. It arrives from two poles that reinforce each other — the
@@ -271,8 +262,7 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   import boundary conditions that are not yours. Its conversational form is
   *“there's an app for that.”* **Test:** can you name whose boundary conditions
   the default encodes? If not, you have adopted someone else's frame. **Prior
-  art:** `docs/2026-10-08-prior-art-the-ai-markdown-wave.md`;
-  `docs/2026-09-15-the-bureaucracy-trap.md`; **frame defaulting**.
+  art:** **frame defaulting**.
 
 * **Test-bearing**: the admission rule for a heuristic. A heuristic is admissible
   only when it **names its own failure** — the observation that would falsify or
@@ -297,9 +287,8 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   reader answer *“why is this here?”* from the page alone? If not, it is a
   question the layout asked and did not answer. **Coined 2026-10-09** from the
   operator's reading of the References receipt: *“the fact that a question was
-  prompted and not answered is the problem.”* **Prior art:**
-  `docs/2026-10-08-the-resize-contract.md`; **audit surface**;
-  `decisions/047-references-section.md` (the 2026-10-09 annotation).
+  prompted and not answered is the problem.”* **Prior art:** the resize contract;
+  **audit surface**.
 
 * **No agent layer**: a tool's contract is its **actuator, its screen and its
   channel**; an agent-facing wrapper — a skill, an MCP server, a plugin — is a
@@ -322,9 +311,8 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   that is **the default shape** in interface form. **Coined 2026-10-09** from
   the operator's observation that the silo has never proposed one. 
   
-  * **Prior art:** `docs/2026-09-05-poverty-of-ui-design.md` (the interface as the
-  hampering abstraction); the i811 refusal
-  (`docs/2026-09-05-i811-dual-layer-output.md`); **the default shape**.
+  * **Prior art:** the interface as the hampering abstraction; the i811 refusal;
+  **the default shape**.
 
 * **The seam rule**: silos communicate by **message**, never by shared file; a
   crossing **declares itself** — what it wrote, where it landed, and who owns the
@@ -341,7 +329,5 @@ Protocol-wide terms of art: the ones another silo could also use. Cited terms in
   from the artefacts alone — what wrote it, where it landed, and who must commit
   it? **Coined 2026-10-10** from the Blandings spin-off residue (a two-hop
   symlink out of the silo) and a register claim that mistook a declared limit for
-  a gap. **Prior art:** `docs/2026-10-10-the-seam.md`, with
-  `docs/2026-10-10-the-impostor-symlink.md` as the worked instance;
-  `playbooks/registry-playbook.md` (*no parallel stores* — the same rule inside
-  one boundary); `docs/2026-10-08-the-participants.md` (participants are actors).
+  a gap. **Prior art:** `playbooks/registry-playbook.md` (*no parallel stores* —
+  the same rule inside one boundary).
