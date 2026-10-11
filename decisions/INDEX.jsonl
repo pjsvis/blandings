@@ -1,2 +1,3 @@
 {"file":"001-founding.md","date":"2026-10-10","status":"Accepted","summary":"The silo is founded","meta":{},"callsign":"ADR-FOUNDING"}
 {"file":"002-corpus-policy.md","date":"2026-10-10","status":"Accepted","summary":"The corpus policy — publish the silo, hold the copyright","meta":{},"callsign":"ADR-CORPUS-POLICY-002"}
+{"file":"003-the-pipe-folds-in.md","date":"2026-10-11","status":"Accepted","summary":"The pipe folds in — speak-md is not a sibling silo","meta":{},"callsign":"ADR-PIPE-FOLDS-003"}

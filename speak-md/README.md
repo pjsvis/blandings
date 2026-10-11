@@ -1,7 +1,8 @@
 # speak-md
 
 Dogfood TTS: flatten markdown to speech-safe prose and hand it to macOS
-`say` (voice: Moira). One silo, one command, learning over time.
+`say` (voice: Moira). Blandings' pipe — folded in, one command, learning over
+time.
 
 ```
 doc.md ──► flatten + respell ──► say -v Moira ──► audio
@@ -42,7 +43,7 @@ If a literal no-Enter double-tap is ever wanted, Karabiner double-tap-0
 From inside any doc's repo (the usual dogfood case):
 
 ```
-just -f ~/Dev/GitHub/speak-md/justfile demo NOW.md   # relative paths resolve
+just -f speak-md/justfile demo NOW.md   # run from the silo root
 ```
 
 ## Knowledge model
@@ -87,7 +88,7 @@ coach, and every part of the tuning loop has a name:
 | avionics numbers | **the drill** | `speak-md drill` — the test bed for voice-ingress number vocalisations (`avionics.json`, tuned by ear like everything else) |
 | the vocabulary walk | **riding the marches** | the bounded-vocabulary survey — named for the [tradition](https://edinburghridingofthemarches.com/). Two instruments: **the march map** (`speak-md census` — counts what Moira hears, ranked, numbered 11–98 minus actuators, ephemeral references never jotted) and **the ride** (`speak-md ride` — Moira auditions the top 83: pause, silcrow in avionics digits, the word, then a real corpus usage — paced by embedded `[[slnc]]` silence so the ear can listen, jot, and sip; no repeated lead-in words, the digits speak for themselves) |
 | the house terms | **the house inspection** | Blandings' `just house` — speaks `house-terms.md`, the house's proper nouns with oracle IPA (L§AB, Leith Scriptorium & Bond, silcrow, okudagram, gloam, Herdr). Word and lip perfect |
-| the patron wall | **the commendation rehearsal** | `just moira-commendation` (okuda) — full rehearsal of `docs/2026-09-10-user-commendations.md`; a commendation is a performance, spoken word and lip perfect or not at all |
+| the patron wall | **the commendation rehearsal** | full rehearsal of a commendation letter; a commendation is a performance, spoken word and lip perfect or not at all |
 | the vernacular landing | **the landing** | profanity and vernacular get a post-word `[[slnc]]` — the pause IS the emphasis; the flattener's `VERNACULAR` table (seeded: shite 500ms) grows by ear |
 | same-spelling, two-sound words | **the homographs** | phrase-level respellings where context decides (`have read` → `have red` — grammar, not guesswork); the flattener's `HOMOGRAPHS` table |
 | the house sign-off | **the epilogue** | "Document complete. The exit is two zeros." — every full-document read closes by teaching the 00 actuator |
@@ -100,21 +101,18 @@ The drill speaks both — the ear decides. (Oracle: fife /faɪf/, fiver
 
 ## Playbooks
 
-The house documents moved to the **play silo** (`Blandings`) on 2026-10-10 —
-the pipe no longer owns them:
-
-- `Blandings`' `playbooks/elocution-playbook.md` — the ear-driven tuning
-  procedure (scan → probe → report → audition → fix → recital), with `-ent` as
-  the worked example.
-- `Blandings`' `house-terms.md`, `auditions.md`, and the `narratives/` library.
-
-This silo owns the **pipe**: the flattener, `lexicon.json` (the repertoire),
-`avionics.json` (the drill), `breaths.json`.
+The house documents and the pipe are **one silo**: Blandings folded speak-md in
+on 2026-10-10, before speak-md was ever occupied
+(`decisions/003-the-pipe-folds-in.md`). The pipe lives in `speak-md/` and owns
+the flattener, `lexicon.json` (the repertoire), `avionics.json` (the drill) and
+`breaths.json`; the tuning procedure and house documents live beside it
+(`playbooks/elocution-playbook.md`, `house-terms.md`, `auditions.md`,
+`narratives/`).
 
 ## Preferences & config
 
-There is no config file, by doctrine (`docs/2026-08-31-actuator-inputs.md`:
-no config or ini — state lives in the corpus or in the process). Three
+There is no config file, by doctrine: no config or ini — state lives in the
+corpus or in the process. Three
  tiers:
 
 1. **Code defaults** — voice Moira, rate 140 (dogfood-tuned). Changing a
@@ -130,7 +128,7 @@ Hosts may pass flags; they hold no speech knowledge.
 
 ## Install
 
-`~/bin/speak-md -> ~/Dev/GitHub/speak-md/speak-md` (ctx-cli pattern).
+`~/bin/speak-md` → `speak-md/speak-md` in this silo (ctx-cli pattern).
 
 Dependencies: macOS `say`, espeak-ng (oracle only, `brew install espeak-ng`),
 Python 3 stdlib only.

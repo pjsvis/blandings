@@ -3,7 +3,7 @@ date: 2026-09-11
 status: active
 ---
 
-*Imported from speak-md 2026-10-10 — a declared copy across the seam. The source owns the original; this silo owns this copy.*
+*Folded in with speak-md 2026-10-10 — the pipe was abandoned before occupation, and this silo owns the whole of it (`decisions/003-the-pipe-folds-in.md`).*
 
 # House terms — word and lip perfect
 

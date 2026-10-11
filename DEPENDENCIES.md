@@ -10,7 +10,7 @@ assumption.
 | `just` | | task runner (the operational vocabulary) | |
 | `git` | | version control | |
 | `td` | | task management | |
-| `speak-md` | | the actuator — flatten markdown to speech-safe prose (`~/Dev/GitHub/speak-md`) | |
+| `speak-md` | | the actuator — flatten markdown to speech-safe prose (in-tree: `speak-md/`, on PATH via `~/bin/speak-md`) | |
 | `gum` | | the file picker for `just story` / `just pick` | |
 | `say` | system (macOS) | the voice — the play's output | |
 

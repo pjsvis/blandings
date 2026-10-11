@@ -22,8 +22,9 @@ repo, that text is not here by design, not by accident.
 
 ## Provenance
 
-Copied 2026-10-10 from `~/Dev/GitHub/speak-md/narratives/` — a **declared copy
-across the seam**: the source owns the original, this silo owns this copy.
+Brought in with the **speak-md fold-in** 2026-10-10 — the pipe was abandoned
+before occupation, and its library is this silo's
+(`decisions/003-the-pipe-folds-in.md`).
 
 The Accelerator is the prosody stress test (Wells: dialogue, semicolons, em
 dashes, exclamations). The Wodehouse is the long-listen text and the comic

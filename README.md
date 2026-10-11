@@ -36,6 +36,6 @@ the drill, `breaths.json`). This silo owns it. The command is on PATH:
 Named, never linked:
 
 - **okuda** — the renderer: markdown in, coloured bytes out.
-- **The pipe** (`speak-md`) — here, not a silo of its own.
+- **The pipe** (`speak-md`) — folded in; never an occupied silo (`decisions/003-the-pipe-folds-in.md`).
 
 *Stamped 2026-10-10 from the Edinburgh Protocol's commissioning procedure.*

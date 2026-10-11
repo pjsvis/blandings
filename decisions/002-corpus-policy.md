@@ -67,7 +67,7 @@ commits, its docs, or its rendered artefacts. Reference by title; never paste.
 ## Related
 
 - `narratives/README.md` — the two halves and the reason
-- `~/Dev/GitHub/speak-md/narratives/` — the source of the library, a declared
-  copy across the seam
-- the source silo's repertory sketch — *private dogfood reading of local files*,
-  the regime this supersedes for a public repo
+- `decisions/003-the-pipe-folds-in.md` — the library's provenance (a fold-in, not
+  a seam crossing)
+- `docs/2026-09-11-the-repertory-company.md` — the repertory sketch: *private
+  dogfood reading of local files*, the regime this supersedes for a public repo

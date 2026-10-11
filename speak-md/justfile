@@ -15,20 +15,18 @@ golden:
     @SPEAK_MD_LEXICON=tests/empty-lexicon.json SPEAK_MD_TODAY=2026-09-10 ./speak-md --dry tests/fixture.md > tests/golden.md
     @echo "golden recaptured"
 
-# Render the before/after listening pair for a document into the silo's
-# scratch tier, then play both through Moira. Artifacts live in tmp/ —
-# in the silo or it doesn't exist — gitignored, regenerated per run.
-# Works from any directory — relative paths resolve against the invocation
-# dir: `just -f ~/Dev/GitHub/speak-md/justfile demo NOW.md` from inside okuda.
+# Render the before/after pair for a document and play both through Moira.
+# Artifacts land in the script's tmp/ (gitignored, regenerated per run);
+# paths resolve via justfile_directory(), so the call site does not matter.
 demo file:
     #!/bin/bash
     set -euo pipefail
-    mkdir -p ~/Dev/GitHub/speak-md/tmp
+    mkdir -p {{justfile_directory()}}/tmp
     f="{{file}}"
     case "$f" in /*) ;; *) f="{{invocation_directory()}}/$f";; esac
-    say -v Moira -o ~/Dev/GitHub/speak-md/tmp/before.aiff -f "$f"
-    ~/Dev/GitHub/speak-md/speak-md -o ~/Dev/GitHub/speak-md/tmp/after.aiff "$f"
-    echo "before: ~/Dev/GitHub/speak-md/tmp/before.aiff"
-    echo "after:  ~/Dev/GitHub/speak-md/tmp/after.aiff"
-    afplay ~/Dev/GitHub/speak-md/tmp/before.aiff
-    afplay ~/Dev/GitHub/speak-md/tmp/after.aiff
+    say -v Moira -o {{justfile_directory()}}/tmp/before.aiff -f "$f"
+    {{justfile_directory()}}/speak-md -o {{justfile_directory()}}/tmp/after.aiff "$f"
+    echo "before: {{justfile_directory()}}/tmp/before.aiff"
+    echo "after:  {{justfile_directory()}}/tmp/after.aiff"
+    afplay {{justfile_directory()}}/tmp/before.aiff
+    afplay {{justfile_directory()}}/tmp/after.aiff

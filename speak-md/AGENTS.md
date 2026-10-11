@@ -1,6 +1,8 @@
-# speak-md — silo rules
+# speak-md — the pipe's rules
 
-Dogfood TTS pipeline (markdown → flatten+respell → say/Moira). Environment
+Dogfood TTS pipeline (markdown → flatten+respell → say/Moira). **Folded into
+Blandings 2026-10-10** — abandoned before occupation, so a module of this silo,
+not a silo of its own (`decisions/003-the-pipe-folds-in.md`). Environment
 tooling, not okuda; speech is compositing — it belongs here.
 
 1. **`just check` before every commit.** The golden test pins an empty

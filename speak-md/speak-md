@@ -20,7 +20,7 @@ Knowledge is two-tier by design:
           learning state). Entries are earned by hearing a mangle — never
           invented speculatively.
 
-Silo home: ~/Dev/GitHub/speak-md (symlinked from ~/bin). The lexicon is
+Home: the `speak-md/` tree of Blandings (symlinked from ~/bin). The lexicon is
 versioned in git; commit learned entries as `lex: <word>`.
 
 Usage:
